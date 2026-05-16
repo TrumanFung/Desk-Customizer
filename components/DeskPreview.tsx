@@ -156,6 +156,7 @@ const BG = "#fafaf9"; // Matches bg-neutral-50 from layout
 export function DeskPreview() {
   return (
     <Canvas
+      className="h-full w-full"
       camera={{ position: [1.65, 1.25, 1.65], fov: 45 }}
       dpr={[1, 2]}
       shadows

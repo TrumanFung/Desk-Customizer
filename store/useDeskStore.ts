@@ -25,6 +25,9 @@ type DeskState = {
   isBusy: boolean;
   error: string | null;
 
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+
   setWidth: (cm: number) => void;
   setDepth: (cm: number) => void;
   setHeight: (cm: number) => void;
@@ -62,6 +65,9 @@ export const useDeskStore = create<DeskState>((set, get) => ({
   designs: [],
   isBusy: false,
   error: null,
+
+  isSidebarOpen: true,
+  toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
 
   setWidth: (cm) => set({ width: clamp(cm, 80, 240) }),
   setDepth: (cm) => set({ depth: clamp(cm, 40, 120) }),
