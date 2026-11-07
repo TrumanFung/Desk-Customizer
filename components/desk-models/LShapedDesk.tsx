@@ -20,23 +20,14 @@ export function LShapedDesk({
   const mainLegX = widthM / 2 - legThickM / 2 - legInsetM;
   const mainLegZ = depthM / 2 - legThickM / 2 - legInsetM;
   const returnCenterX = sign * (widthM / 2 - depthM / 2);
-  // const returnCenterZ = -depthM / 2 - returnLengthM / 2 + depthM / 2;
-
-  // const outerLegX = sign * (widthM / 2 + depthM / 2 - legThickM / 2 - legInsetM);
-  // const returnOuterLegZ = returnCenterZ - returnLengthM / 2 + legThickM / 2 + legInsetM;
-  // const returnInnerLegZ = returnCenterZ + returnLengthM / 2 - legThickM / 2 - legInsetM;
-  // 1. Maintain the return's center position
   const returnCenterZ = -depthM / 2 - returnLengthM / 2;
 
-  // 2. Move the legs from the center (X) to the outer edges of the return width
-  // This uses the depth of the main desk as the width of the return piece
-  const returnLegXOffset = (depthM / 2) - (legThickM / 2) - legInsetM;
-  const outerLegXRight = returnCenterX + (sign * returnLegXOffset);
-  const outerLegXLeft = returnCenterX - (sign * returnLegXOffset);
-
-  // 3. Snap the legs to the far front and far back of the return segment (Z)
-  const returnFarEndEdgeZ = returnCenterZ - (returnLengthM / 2) + (legThickM / 2) + legInsetM;
-  const returnConnectionEdgeZ = returnCenterZ + (returnLengthM / 2) - (legThickM / 2) - legInsetM;
+  // Return legs sit at the outer edges of the return's width (using the main
+  // desk's depth as the return's width) and snap to the return's far end.
+  const returnLegXOffset = depthM / 2 - legThickM / 2 - legInsetM;
+  const outerLegXRight = returnCenterX + sign * returnLegXOffset;
+  const outerLegXLeft = returnCenterX - sign * returnLegXOffset;
+  const returnFarEndEdgeZ = returnCenterZ - returnLengthM / 2 + legThickM / 2 + legInsetM;
 
   const drawerHeightM = 0.16;
   const drawerDepthM = Math.max(0.24, depthM * 0.5);
@@ -57,26 +48,11 @@ export function LShapedDesk({
         <meshStandardMaterial color={color} roughness={0.55} />
       </mesh>
 
-      {/* {[
-        [mainLegX, legY, mainLegZ],
-        [-mainLegX, legY, mainLegZ],
-        [mainLegX, legY, -mainLegZ],
-        [-mainLegX, legY, -mainLegZ],
-        [outerLegX, legY, returnOuterLegZ],
-        [outerLegX, legY, returnInnerLegZ]
-      ].map((p, idx) => (
-        <mesh key={idx} position={p as [number, number, number]} castShadow>
-          <boxGeometry args={[legThickM, heightM, legThickM]} />
-          <meshStandardMaterial color={LEG_METAL} metalness={0.35} roughness={0.45} />
-        </mesh>
-      ))} */}
-
       {[
         [mainLegX, legY, mainLegZ],
         [-mainLegX, legY, mainLegZ],
         [mainLegX, legY, -mainLegZ],
         [-mainLegX, legY, -mainLegZ],
-        // New Return Legs snapped to the corners you indicated
         [outerLegXLeft, legY, returnFarEndEdgeZ],
         [outerLegXRight, legY, returnFarEndEdgeZ]
       ].map((p, idx) => (

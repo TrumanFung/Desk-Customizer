@@ -14,10 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="flex h-screen w-screen overflow-hidden bg-neutral-50 text-neutral-900 antialiased">
-        <div className="mx-auto flex h-full w-full min-h-0 max-w-[1280px] px-4 sm:px-6 lg:px-8">
+      <body className="min-h-screen w-full bg-neutral-50 text-neutral-900 antialiased md:flex md:h-screen md:w-screen md:overflow-hidden">
+        <div className="mx-auto flex w-full min-h-0 max-w-[1280px] flex-col md:h-full md:flex-row md:px-6 lg:px-8">
           <Sidebar />
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+          <div className="order-1 flex min-h-0 flex-1 flex-col md:order-2 md:overflow-hidden">{children}</div>
         </div>
       </body>
     </html>

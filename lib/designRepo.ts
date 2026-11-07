@@ -1,5 +1,15 @@
 import { promises as fs } from "fs";
 import path from "path";
+import {
+  clamp,
+  DEPTH_MAX_CM,
+  DEPTH_MIN_CM,
+  HEIGHT_MAX_CM,
+  HEIGHT_MIN_CM,
+  HEX_COLOR_RE,
+  WIDTH_MAX_CM,
+  WIDTH_MIN_CM
+} from "@/lib/deskLimits";
 import type {
   DeskDesign,
   DeskDesignInput,
@@ -24,8 +34,11 @@ type StoreShape = {
 };
 
 function dataFilePath() {
-  // Keep this inside the project so it persists without a DB.
-  return path.join(process.cwd(), "lib", "data", "designs.json");
+  // DESK_DATA_DIR lets tests point this at a throwaway directory instead of
+  // the real lib/data/designs.json. Keep it inside the project by default so
+  // it persists without a DB.
+  const dir = process.env.DESK_DATA_DIR ?? path.join(process.cwd(), "lib", "data");
+  return path.join(dir, "designs.json");
 }
 
 async function ensureDirExists(filePath: string) {
@@ -78,7 +91,7 @@ export function validateInput(input: unknown): DeskDesignInput {
   if (!Number.isFinite(height)) throw new Error("Invalid height");
 
   const color = typeof i.color === "string" ? i.color : "";
-  if (!color) throw new Error("Invalid color");
+  if (!HEX_COLOR_RE.test(color)) throw new Error("Invalid color");
 
   const deskKind = normalizeDeskKind(i.deskKind);
   const returnSide = normalizeReturnSide(i.returnSide);
@@ -86,9 +99,9 @@ export function validateInput(input: unknown): DeskDesignInput {
   return {
     id: typeof i.id === "string" ? i.id : undefined,
     name: typeof i.name === "string" ? i.name : undefined,
-    width,
-    depth,
-    height,
+    width: clamp(width, WIDTH_MIN_CM, WIDTH_MAX_CM),
+    depth: clamp(depth, DEPTH_MIN_CM, DEPTH_MAX_CM),
+    height: clamp(height, HEIGHT_MIN_CM, HEIGHT_MAX_CM),
     color,
     deskKind,
     returnSide,

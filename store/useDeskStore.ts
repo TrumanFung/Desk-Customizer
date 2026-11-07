@@ -1,6 +1,15 @@
 "use client";
 
 import { create } from "zustand";
+import {
+  clamp,
+  DEPTH_MAX_CM,
+  DEPTH_MIN_CM,
+  HEIGHT_MAX_CM,
+  HEIGHT_MIN_CM,
+  WIDTH_MAX_CM,
+  WIDTH_MIN_CM
+} from "@/lib/deskLimits";
 import type {
   DeskDesign,
   DeskDesignInput,
@@ -24,6 +33,7 @@ type DeskState = {
   designs: DeskDesign[];
   isBusy: boolean;
   error: string | null;
+  dismissError: () => void;
 
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -46,9 +56,6 @@ type DeskState = {
   deleteDesign: (id: string) => Promise<void>;
 };
 
-const clamp = (n: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, n));
-
 export const useDeskStore = create<DeskState>((set, get) => ({
   width: 140,
   depth: 70,
@@ -65,13 +72,14 @@ export const useDeskStore = create<DeskState>((set, get) => ({
   designs: [],
   isBusy: false,
   error: null,
+  dismissError: () => set({ error: null }),
 
   isSidebarOpen: true,
   toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
 
-  setWidth: (cm) => set({ width: clamp(cm, 80, 240) }),
-  setDepth: (cm) => set({ depth: clamp(cm, 40, 120) }),
-  setHeight: (cm) => set({ height: clamp(cm, 60, 130) }),
+  setWidth: (cm) => set({ width: clamp(cm, WIDTH_MIN_CM, WIDTH_MAX_CM) }),
+  setDepth: (cm) => set({ depth: clamp(cm, DEPTH_MIN_CM, DEPTH_MAX_CM) }),
+  setHeight: (cm) => set({ height: clamp(cm, HEIGHT_MIN_CM, HEIGHT_MAX_CM) }),
   setColor: (hex) => set({ color: hex }),
   setDeskKind: (kind) => set({ deskKind: kind }),
   setReturnSide: (side) => set({ returnSide: side }),
@@ -114,6 +122,9 @@ export const useDeskStore = create<DeskState>((set, get) => ({
       const res = await fetch(`/api/designs/${encodeURIComponent(id)}`, {
         cache: "no-store"
       });
+      if (res.status === 404) {
+        throw new Error("That design was not found — it may have been deleted.");
+      }
       if (!res.ok) throw new Error(`Load failed (${res.status})`);
       const data = (await res.json()) as { design: DeskDesign };
       get().hydrateFromDesign(data.design);
@@ -152,7 +163,12 @@ export const useDeskStore = create<DeskState>((set, get) => ({
         headers: { "content-type": "application/json" },
         body: JSON.stringify(input)
       });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(body?.error ?? `Save failed (${res.status})`);
+      }
       const data = (await res.json()) as { design: DeskDesign };
       set({ selectedDesignId: data.design.id });
       await get().listDesigns();
@@ -169,6 +185,9 @@ export const useDeskStore = create<DeskState>((set, get) => ({
       const res = await fetch(`/api/designs/${encodeURIComponent(id)}`, {
         method: "DELETE"
       });
+      if (res.status === 404) {
+        throw new Error("That design was already deleted.");
+      }
       if (!res.ok) throw new Error(`Delete failed (${res.status})`);
       const current = get().selectedDesignId;
       if (current === id) set({ selectedDesignId: null });
